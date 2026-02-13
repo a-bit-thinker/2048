@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clone and build nneonneo/2048-ai into /usr/local/etc/2048-ai."""
+"""Clone and build nneonneo/2048-ai into this repository's ./2048-ai folder."""
 
 import os
 import subprocess

@@ -74,9 +74,10 @@ def main() -> int:
         if code == 0:
             return 0
         if args.engine == "nneonneo":
+            expected_repo = nneonneo_repo_dir(base_dir)
             print(
-                "nneonneo engine not available. Put repo at /usr/local/etc/2048-ai "
-                "and build it (run install_nneonneo_2048_ai.py).",
+                "nneonneo engine not available. Ensure the repo exists at "
+                f"{expected_repo} and build it (run install_nneonneo_2048_ai.py).",
                 file=sys.stderr,
             )
             return 1
