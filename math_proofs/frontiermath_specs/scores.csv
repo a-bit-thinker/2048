@@ -1,0 +1,15 @@
+rank,file,problem,score
+1,07_large_steiner_systems.md,Large Steiner Systems,9.0
+2,10_stretched_lr_coefficients.md,Stretched Littlewood-Richardson Coefficients,8.8
+3,02_ramsey_hypergraphs.md,A Ramsey-style Problem on Hypergraphs,8.4
+4,01_ramsey_book_graphs.md,Ramsey Numbers for Book Graphs,8.3
+5,14_unknotting_number_one.md,Unknotting Number = 1,7.8
+6,04_degree_vs_sensitivity.md,Degree vs Sensitivity for Boolean Functions,7.4
+7,13_prime_factorization_constant.md,Prime Factorization (GNFS constant),7.1
+8,03_arithmetic_kakeya.md,The Arithmetic Kakeya Conjecture,6.8
+9,09_inverse_galois_m23.md,Inverse Galois (M23 polynomial),6.2
+10,11_symplectic_ball_packing.md,Symplectic Ball Packing,5.6
+11,05_explicit_deformations_algebras.md,Explicit Deformations of Algebras,5.2
+12,06_surface_many_singularities.md,Surface with a High Number of Singularities,4.9
+13,12_apery_style_irrationality.md,Apéry-style Irrationality Proofs,4.6
+14,08_2adic_absolute_galois_group.md,The 2-adic Absolute Galois Group,3.7
