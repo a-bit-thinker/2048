@@ -1,1 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Keep Ask Why</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 16px;
+      line-height: 1.4;
+    }
+    #status { white-space: pre-wrap; }
+    #log { margin-top: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+  <div id="log"></div>
 
+  <script>
+    (function () {
+      const DEFAULT_QUESTIONS = [
+        "Why are you doing this?",
+        "What is not working?",
+        "Why did this fail?",
+        "What are you avoiding?",
+        "What matters most right now?",
+        "What is the simplest next step?",
+        "What are you assuming without proof?",
+        "What are you afraid to admit?",
+        "What did you learn from the last try?",
+        "What can you remove?",
+        "Are you solving the right problem?",
+        "What if you are wrong?",
+        "What are you repeating?",
+        "What would make this easier?",
+        "What would you do if you had to finish today?",
+        "Why are you still stuck?",
+        "What is the real goal?",
+        "What are you postponing?",
+        "What do you need to ask next?",
+        "Why does this matter?"
+      ];
+
+      const statusEl = document.getElementById("status");
+      const logEl = document.getElementById("log");
+      const params = new URLSearchParams(location.search);
+      const initialInterval = Math.max(1, Number(params.get("interval") || 200));
+
+      const state = {
+        questions: DEFAULT_QUESTIONS.slice(),
+        intervalSec: initialInterval,
+        index: 0,
+        timer: null,
+        running: false
+      };
+
+      function now() {
+        return new Date().toISOString().replace("T", " ").replace("Z", "");
+      }
+
+      function renderStatus() {
+        statusEl.textContent =
+          "keep-ask-why active\n" +
+          "interval_sec=" + state.intervalSec + "\n" +
+          "question_count=" + state.questions.length + "\n" +
+          "running=" + state.running + "\n" +
+          "controls: keepAskWhy.status(), keepAskWhy.next(), keepAskWhy.ask('text'), keepAskWhy.setIntervalSec(60), keepAskWhy.setQuestions([...]), keepAskWhy.start(), keepAskWhy.stop()";
+      }
+
+      function pushLine(line) {
+        console.log(line);
+        const next = logEl.textContent + line + "\n";
+        const keepLast = next.split("\n").slice(-60).join("\n");
+        logEl.textContent = keepLast;
+      }
+
+      function nextQuestion() {
+        if (!state.questions.length) {
+          return "Why?";
+        }
+        const q = state.questions[state.index];
+        state.index = (state.index + 1) % state.questions.length;
+        return q;
+      }
+
+      function askQuestion(text) {
+        if (!text) {
+          return nextQuestion();
+        }
+        let h = 0;
+        for (let i = 0; i < text.length; i += 1) {
+          h = ((h << 5) - h + text.charCodeAt(i)) | 0;
+        }
+        const idx = Math.abs(h) % state.questions.length;
+        return state.questions[idx];
+      }
+
+      function tick() {
+        const q = nextQuestion();
+        pushLine("[" + now() + "] " + q);
+        return q;
+      }
+
+      function restartTimer() {
+        if (state.timer) {
+          clearInterval(state.timer);
+        }
+        if (!state.running) {
+          return;
+        }
+        state.timer = setInterval(tick, state.intervalSec * 1000);
+      }
+
+      const api = {
+        health: function () {
+          return {
+            ok: true,
+            running: state.running,
+            interval_sec: state.intervalSec,
+            question_count: state.questions.length
+          };
+        },
+        next: function () {
+          const q = tick();
+          return { question: q };
+        },
+        ask: function (text) {
+          const q = askQuestion(String(text || ""));
+          pushLine("[" + now() + "] " + q);
+          return { question: q, received_text: String(text || "") };
+        },
+        setIntervalSec: function (n) {
+          const next = Math.max(1, Number(n || 1));
+          state.intervalSec = next;
+          renderStatus();
+          restartTimer();
+          return { interval_sec: state.intervalSec };
+        },
+        setQuestions: function (list) {
+          if (!Array.isArray(list) || list.length === 0) {
+            throw new Error("questions must be a non-empty array");
+          }
+          state.questions = list.map(function (x) {
+            const s = String(x || "").trim();
+            if (!s) {
+              throw new Error("each question must be non-empty");
+            }
+            return s;
+          });
+          state.index = 0;
+          renderStatus();
+          return { count: state.questions.length };
+        },
+        start: function () {
+          if (state.running) {
+            return { running: true };
+          }
+          state.running = true;
+          renderStatus();
+          tick();
+          restartTimer();
+          return { running: true };
+        },
+        stop: function () {
+          state.running = false;
+          if (state.timer) {
+            clearInterval(state.timer);
+            state.timer = null;
+          }
+          renderStatus();
+          return { running: false };
+        },
+        status: function () {
+          return api.health();
+        }
+      };
+
+      window.keepAskWhy = api;
+      renderStatus();
+      api.start();
+    })();
+  </script>
+</body>
+</html>
