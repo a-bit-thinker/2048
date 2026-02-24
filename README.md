@@ -19,6 +19,8 @@ Open the site, then open browser devtools console:
 - `keepAskWhy.status()`
 - `keepAskWhy.next()`
 - `keepAskWhy.ask("I failed again")`
+- `keepAskWhy.askMarkdown("# Loop\\nThis is markdown input")`
+- `keepAskWhy.request("POST", "/ask", { markdown: "# Loop\\nThis is markdown input" })`
 - `keepAskWhy.setIntervalSec(60)`
 - `keepAskWhy.setQuestions(["Why?","What now?"])`
 - `keepAskWhy.stop()`
@@ -27,7 +29,10 @@ Open the site, then open browser devtools console:
 ## Optional URL parameter
 
 - `?interval=5` to change startup interval
+- `?md=...` to send markdown text directly as input on load
+- `?md_b64=...` to send base64-encoded markdown text on load
 
 Example:
 
 - `https://a-bit-thinker.github.io/2048/?interval=5`
+- `https://a-bit-thinker.github.io/2048/?md=##%20Test%0AHello`

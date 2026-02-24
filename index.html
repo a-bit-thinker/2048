@@ -68,7 +68,7 @@
           "interval_sec=" + state.intervalSec + "\n" +
           "question_count=" + state.questions.length + "\n" +
           "running=" + state.running + "\n" +
-          "controls: keepAskWhy.status(), keepAskWhy.next(), keepAskWhy.ask('text'), keepAskWhy.setIntervalSec(60), keepAskWhy.setQuestions([...]), keepAskWhy.start(), keepAskWhy.stop()";
+          "controls: keepAskWhy.status(), keepAskWhy.next(), keepAskWhy.ask('text'), keepAskWhy.askMarkdown('# title\\ntext'), keepAskWhy.request('POST','/ask',{markdown:'...'}), keepAskWhy.setIntervalSec(60), keepAskWhy.setQuestions([...]), keepAskWhy.start(), keepAskWhy.stop()";
       }
 
       function pushLine(line) {
@@ -97,6 +97,34 @@
         }
         const idx = Math.abs(h) % state.questions.length;
         return state.questions[idx];
+      }
+
+      function normalizeAskText(payload) {
+        if (payload == null) {
+          return "";
+        }
+        if (typeof payload === "string") {
+          return payload;
+        }
+        if (typeof payload === "object") {
+          if (typeof payload.markdown === "string") {
+            return payload.markdown;
+          }
+          if (typeof payload.text === "string") {
+            return payload.text;
+          }
+        }
+        return String(payload);
+      }
+
+      function decodeBase64Utf8(input) {
+        try {
+          const binary = atob(input);
+          const bytes = Uint8Array.from(binary, function (c) { return c.charCodeAt(0); });
+          return new TextDecoder().decode(bytes);
+        } catch (_err) {
+          return "";
+        }
       }
 
       function tick() {
@@ -128,10 +156,14 @@
           const q = tick();
           return { question: q };
         },
-        ask: function (text) {
-          const q = askQuestion(String(text || ""));
+        ask: function (input) {
+          const text = normalizeAskText(input);
+          const q = askQuestion(text);
           pushLine("[" + now() + "] " + q);
-          return { question: q, received_text: String(text || "") };
+          return { question: q, received_text: text };
+        },
+        askMarkdown: function (markdown) {
+          return api.ask({ markdown: String(markdown || "") });
         },
         setIntervalSec: function (n) {
           const next = Math.max(1, Number(n || 1));
@@ -176,12 +208,42 @@
         },
         status: function () {
           return api.health();
+        },
+        request: function (method, path, body) {
+          const m = String(method || "GET").toUpperCase();
+          const p = String(path || "");
+          if (m === "GET" && p === "/health") {
+            return api.health();
+          }
+          if (m === "GET" && p === "/next") {
+            return api.next();
+          }
+          if (m === "POST" && p === "/ask") {
+            return api.ask(body || "");
+          }
+          if (m === "POST" && p === "/interval") {
+            const value = body && body.interval_sec != null ? body.interval_sec : body && body.intervalSec;
+            return api.setIntervalSec(value);
+          }
+          if (m === "POST" && p === "/questions") {
+            const list = body && body.questions;
+            return api.setQuestions(list);
+          }
+          throw new Error("not found: " + m + " " + p);
         }
       };
 
       window.keepAskWhy = api;
       renderStatus();
       api.start();
+
+      const md = params.get("md");
+      const mdB64 = params.get("md_b64");
+      if (mdB64) {
+        api.askMarkdown(decodeBase64Utf8(mdB64));
+      } else if (md) {
+        api.askMarkdown(md);
+      }
     })();
   </script>
 </body>
