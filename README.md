@@ -21,6 +21,9 @@ Open the site, then open browser devtools console:
 - `keepAskWhy.ask("I failed again")`
 - `keepAskWhy.askMarkdown("# Loop\\nThis is markdown input")`
 - `keepAskWhy.request("POST", "/ask", { markdown: "# Loop\\nThis is markdown input" })`
+- `keepAskWhy.setFocusMarkdown("# Loop\\nThink this continuously")`
+- `keepAskWhy.request("POST", "/focus", { markdown: "# Loop\\nThink this continuously" })`
+- `keepAskWhy.clearFocus()`
 - `keepAskWhy.setIntervalSec(60)`
 - `keepAskWhy.setQuestions(["Why?","What now?"])`
 - `keepAskWhy.stop()`
@@ -31,8 +34,11 @@ Open the site, then open browser devtools console:
 - `?interval=5` to change startup interval
 - `?md=...` to send markdown text directly as input on load
 - `?md_b64=...` to send base64-encoded markdown text on load
+- `?focus_md=...` to continuously think one markdown text in auto loop
+- `?focus_md_b64=...` same as above, base64-encoded
 
 Example:
 
 - `https://a-bit-thinker.github.io/2048/?interval=5`
 - `https://a-bit-thinker.github.io/2048/?md=##%20Test%0AHello`
+- `https://a-bit-thinker.github.io/2048/?interval=200&focus_md=##%20Loop%0AContinuous%20thinking`
