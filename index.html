@@ -54,7 +54,6 @@
         questions: DEFAULT_QUESTIONS.slice(),
         intervalSec: initialInterval,
         index: 0,
-        focusText: "",
         timer: null,
         running: false
       };
@@ -68,9 +67,8 @@
           "keep-ask-why active\n" +
           "interval_sec=" + state.intervalSec + "\n" +
           "question_count=" + state.questions.length + "\n" +
-          "focus_active=" + (state.focusText.length > 0) + "\n" +
           "running=" + state.running + "\n" +
-          "controls: keepAskWhy.status(), keepAskWhy.next(), keepAskWhy.ask('text'), keepAskWhy.askMarkdown('# title\\ntext'), keepAskWhy.setFocusMarkdown('# title\\ntext'), keepAskWhy.clearFocus(), keepAskWhy.request('POST','/ask',{markdown:'...'}), keepAskWhy.request('POST','/focus',{markdown:'...'}), keepAskWhy.setIntervalSec(60), keepAskWhy.setQuestions([...]), keepAskWhy.start(), keepAskWhy.stop()";
+          "controls: keepAskWhy.status(), keepAskWhy.next(), keepAskWhy.ask('text'), keepAskWhy.askMarkdown('# title\\ntext'), keepAskWhy.request('POST','/ask',{markdown:'...'}), keepAskWhy.setIntervalSec(60), keepAskWhy.setQuestions([...]), keepAskWhy.start(), keepAskWhy.stop()";
       }
 
       function pushLine(line) {
@@ -130,7 +128,7 @@
       }
 
       function tick() {
-        const q = state.focusText ? askQuestion(state.focusText) : nextQuestion();
+        const q = nextQuestion();
         pushLine("[" + now() + "] " + q);
         return q;
       }
@@ -151,8 +149,7 @@
             ok: true,
             running: state.running,
             interval_sec: state.intervalSec,
-            question_count: state.questions.length,
-            focus_active: state.focusText.length > 0
+            question_count: state.questions.length
           };
         },
         next: function () {
@@ -167,23 +164,6 @@
         },
         askMarkdown: function (markdown) {
           return api.ask({ markdown: String(markdown || "") });
-        },
-        setFocusText: function (input) {
-          const text = normalizeAskText(input);
-          state.focusText = text;
-          renderStatus();
-          return {
-            focus_active: state.focusText.length > 0,
-            question: state.focusText ? askQuestion(state.focusText) : null
-          };
-        },
-        setFocusMarkdown: function (markdown) {
-          return api.setFocusText({ markdown: String(markdown || "") });
-        },
-        clearFocus: function () {
-          state.focusText = "";
-          renderStatus();
-          return { focus_active: false };
         },
         setIntervalSec: function (n) {
           const next = Math.max(1, Number(n || 1));
@@ -241,12 +221,6 @@
           if (m === "POST" && p === "/ask") {
             return api.ask(body || "");
           }
-          if (m === "POST" && p === "/focus") {
-            return api.setFocusText(body || "");
-          }
-          if (m === "DELETE" && p === "/focus") {
-            return api.clearFocus();
-          }
           if (m === "POST" && p === "/interval") {
             const value = body && body.interval_sec != null ? body.interval_sec : body && body.intervalSec;
             return api.setIntervalSec(value);
@@ -261,22 +235,15 @@
 
       window.keepAskWhy = api;
       renderStatus();
+      api.start();
 
       const md = params.get("md");
       const mdB64 = params.get("md_b64");
-      const focusMd = params.get("focus_md");
-      const focusMdB64 = params.get("focus_md_b64");
-      if (focusMdB64) {
-        api.setFocusMarkdown(decodeBase64Utf8(focusMdB64));
-      } else if (focusMd) {
-        api.setFocusMarkdown(focusMd);
-      }
       if (mdB64) {
         api.askMarkdown(decodeBase64Utf8(mdB64));
       } else if (md) {
         api.askMarkdown(md);
       }
-      api.start();
     })();
   </script>
 </body>
